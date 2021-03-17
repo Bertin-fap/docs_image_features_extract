@@ -1,0 +1,669 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>image_features_extract.image_features_extract_LITEN &#8212; re_eoles 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">image_features_extract.image_features_extract_LITEN</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for image_features_extract.image_features_extract_LITEN</h1><div class="highlight"><pre>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;image_processing&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;image_processing_1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;make_tex_document&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;make_tex_document_1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;build_bbox&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Function used for Batch processing of the confocal images</span>
+
+<span class="sd">Inputs </span>
+<span class="sd">Confocal images as .plu files (binary standard of Sensofar company)</span>
+
+<span class="sd">Input files organization </span>
+<span class="sd">For several images &#39;wafer #-&amp;&#39; per wafer &#39;wafer #&#39; per cut &#39;cut ###&#39;</span>
+
+<span class="sd">the files organization is as follows:</span>
+
+<span class="sd">root / cut ### / wafer # / save_plu / wafer #-&amp;.plu</span>
+<span class="sd">where:</span>
+
+<span class="sd">    - &amp; stands for a, b, c, d, e </span>
+<span class="sd">    - \# stands for a digit</span>
+<span class="sd">    - total number of files is open for each &#39;wafer #&#39;</span>
+<span class="sd">    - total number of cuts ### defined by length of list cuts</span>
+
+<span class="sd">Outputs</span>
+<span class="sd">5 files per image &#39;wafer #-&amp;&#39; </span>
+<span class="sd">    - EXCEL file &#39;wafer#-&amp;.xlsx&#39; containing the morphological information of the features</span>
+<span class="sd">    - JPEG file of the corrected raw image with indication of the corrected pixels</span>
+<span class="sd">    - JPEG file &#39;wafer#-&amp;-im-rebuild.jpg&#39; of the features represented in colored circular dots of equivalent area as the real features</span>
+<span class="sd">with color scale relative to the features depth</span>
+<span class="sd">    - JPEG file &#39;wafer#-&amp;-im-bbox.jpg&#39; of the features size histogram</span>
+<span class="sd">    - JPEG file &#39;wafer#-&amp;-im-hist.jpg&#39; of box plot of the features size</span>
+
+<span class="sd">A $\LaTeX$ file &#39;cut_report ###.tex&#39; as a report gathering the 4 JPEG files and a graph per cut integrating all the corresponding box plots </span>
+
+<span class="sd">output files location </span>
+<span class="sd">&#39;root / cut ### / wafer # / results /&#39; for &#39;wafer#-&amp;.xlsx&#39; and the JPEG files </span>
+<span class="sd">&#39;root / cut ### /&#39; for cut_report ###.tex</span>
+
+<span class="sd">where:</span>
+<span class="sd">    - &amp; stands for a, b, c, d, e </span>
+<span class="sd">    - \# stands for a digit, </span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<div class="viewcode-block" id="image_processing_1"><a class="viewcode-back" href="../../image_features_extract.html#image_features_extract.image_features_extract_LITEN.image_processing_1">[docs]</a><span class="k">def</span> <span class="nf">image_processing_1</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">analyse_morpho</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Process an image by:</span>
+<span class="sd">        - reading a .plu image</span>
+<span class="sd">        - substituing non measured values by interpolated ones</span>
+<span class="sd">        - levelling the image using a morphological filter (top hat)</span>
+<span class="sd">        - binarizing the image using a threshold</span>
+<span class="sd">        - doing an image morphological analysis</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        param (dict) : param[&quot;repertoire&quot;] name of the directory</span>
+<span class="sd">                       param[&quot;file&quot;] name of the file to process</span>
+<span class="sd">                       param[&quot;dir_results&quot;] name of the directory where the morphological resuts are stored</span>
+<span class="sd">                       param[&#39;Top_hat_length&#39;] top hat legth should be larger than the largest feature to extract</span>
+<span class="sd">                       param[&#39;threshold&#39;] should be larger than the residual image background</span>
+<span class="sd">        analyse_morpho (bool): if True do the morphological analysis </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        if analyse_morpho == True</span>
+<span class="sd">            df (dataframe): index|&#39;x&#39;|&#39;long_x&#39;| &#39;y&#39;|&#39;long_y&#39;| &#39;size&#39;|&#39;depth&#39; with :</span>
+<span class="sd">                - index: feature index</span>
+<span class="sd">                - x: gravity center x position of the feature</span>
+<span class="sd">                - long_x: maximum feature width</span>
+<span class="sd">                - y: gravity center y position of the feature</span>
+<span class="sd">                - long_y: maximum feature height</span>
+<span class="sd">                - size: pixels number of the feature </span>
+<span class="sd">                - depth : feature depth </span>
+<span class="sd">        if analyse_morpho == False  returns None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># 3rd party import</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    
+    <span class="c1"># Internal import</span>
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">fill_gap</span><span class="p">,</span> <span class="n">analyse_morphologique</span>
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">read_plu_topography</span><span class="p">,</span> <span class="n">top_hat_flattening</span>
+
+    <span class="c1"># .plu image reading and correction</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">confocal_img</span><span class="p">,</span> <span class="n">rgb</span> <span class="o">=</span> <span class="n">read_plu_topography</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;repertoire&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span> <span class="c1"># fle .plu reading</span>
+    <span class="n">confocal_img1</span> <span class="o">=</span> <span class="n">fill_gap</span><span class="p">(</span><span class="n">confocal_img</span><span class="p">)</span> <span class="c1"># substitute non measured values by interpolated ones</span>
+
+    
+    <span class="c1"># top hat processing</span>
+    <span class="n">im_corr</span> <span class="o">=</span> <span class="n">top_hat_flattening</span><span class="p">(</span><span class="n">confocal_img1</span><span class="p">,</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;Top_hat_length&#39;</span><span class="p">],</span><span class="n">top_hat_sens</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># binarization</span>
+    <span class="n">im_bin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">im_corr</span> <span class="o">&lt;</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># morphological analysis</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">analyse_morpho</span><span class="p">:</span>
+        <span class="n">file_save_excel</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;.xlsx&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">analyse_morphologique</span><span class="p">(</span><span class="n">im_bin</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="n">im_corr</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_excel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">confocal_img1</span><span class="p">,</span> <span class="n">im_corr</span><span class="p">,</span> <span class="n">im_bin</span><span class="p">,</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="image_processing"><a class="viewcode-back" href="../../image_features_extract.html#image_features_extract.image_features_extract_LITEN.image_processing">[docs]</a><span class="k">def</span> <span class="nf">image_processing</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">analyse_morpho</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    depreciated use image_processing_1</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># 3rd party import</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+    
+    <span class="c1"># Internal import</span>
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">read_image</span><span class="p">,</span><span class="n">gaussian_flattening</span><span class="p">,</span> <span class="n">analyse_morphologique</span>
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">xRemoveSpriesHorizontal</span><span class="p">,</span> <span class="n">Otsu_tresholding</span>
+
+    <span class="c1"># lecture de l&#39;image</span>
+    <span class="n">im_brute</span><span class="p">,</span> <span class="n">n_row</span><span class="p">,</span> <span class="n">n_col</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;repertoire&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span>
+
+    <span class="c1"># mise à plat de l&#39;image</span>
+    <span class="n">im_flat</span> <span class="o">=</span> <span class="n">gaussian_flattening</span><span class="p">(</span><span class="n">im_brute</span><span class="p">,</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">])</span>
+    <span class="c1"># im_flat = poly_flattening(im_brute)</span>
+
+    <span class="c1"># supression des traces verticales</span>
+    <span class="n">im_corr_strie</span> <span class="o">=</span> <span class="n">xRemoveSpriesHorizontal</span><span class="p">(</span>
+        <span class="n">im_flat</span><span class="p">,</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;decNum_h&quot;</span><span class="p">],</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;wname&quot;</span><span class="p">],</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;sigma_wl_h&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># binarisation de l&#39;image</span>
+    <span class="n">im_bin</span> <span class="o">=</span> <span class="n">Otsu_tresholding</span><span class="p">(</span><span class="n">im_corr_strie</span><span class="p">,</span> <span class="n">Ostu_corr</span><span class="o">=</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;Ostu_corr&quot;</span><span class="p">])</span>
+
+    <span class="c1"># analyse morphologique</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">analyse_morpho</span><span class="p">:</span>
+        <span class="n">file_save_excel</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;.xlsx&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">analyse_morphologique</span><span class="p">(</span><span class="n">im_bin</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_excel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">im_brute</span><span class="p">,</span> <span class="n">im_corr_strie</span><span class="p">,</span> <span class="n">im_flat</span><span class="p">,</span> <span class="n">im_bin</span><span class="p">,</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="make_tex_document"><a class="viewcode-back" href="../../image_features_extract.html#image_features_extract.image_features_extract_LITEN.make_tex_document">[docs]</a><span class="k">def</span> <span class="nf">make_tex_document</span><span class="p">(</span>
+    <span class="n">param</span><span class="p">,</span>
+    <span class="n">im_brute</span><span class="p">,</span>
+    <span class="n">im_corr_strie</span><span class="p">,</span>
+    <span class="n">im_flat</span><span class="p">,</span>
+    <span class="n">im_bin</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+    <span class="n">flag</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">new_section</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    make_tex_document_1</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># 3rd party import</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">convert</span>
+    <span class="n">size_min</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">alpha1</span> <span class="o">=</span> <span class="mf">0.35</span>
+    <span class="n">alpha2</span> <span class="o">=</span> <span class="mf">0.8</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span>
+    <span class="n">n_row</span><span class="p">,</span> <span class="n">n_col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">im_brute</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">im_flat</span> <span class="o">=</span> <span class="n">im_flat</span> <span class="o">-</span> <span class="n">im_flat</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">im_flat</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">)</span>
+
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;size &gt;= @size_min&quot;</span><span class="p">)</span>
+    <span class="n">patchesb</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">df1</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">df1</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">df1</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]):</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="n">patchesb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;size &lt; @size_min&quot;</span><span class="p">)</span>
+    <span class="n">patchesc</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">df1</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">df1</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">df1</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]):</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="n">patchesc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">PatchCollection</span><span class="p">(</span>
+        <span class="n">patchesb</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha1</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span>
+    <span class="p">)</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">PatchCollection</span><span class="p">(</span>
+        <span class="n">patchesc</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha2</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;green&quot;</span>
+    <span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+    <span class="n">file_save_im_brute</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-brute.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_brute</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">convert</span><span class="p">(</span><span class="n">im_bin</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">)</span>
+    <span class="n">file_save_im_bin</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-bin.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_bin</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;histogramme des tailles&quot;</span><span class="p">)</span>
+    <span class="n">file_save_im_hist</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-hist.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_hist</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">])</span>
+    <span class="n">file_save_im_erea</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-bbox.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_erea</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">file_save_doc_tex</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;_doc_tex.tex&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_tex&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;rapport.tex&quot;</span><span class="p">),</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">doc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;w&quot;</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\documentclass[a4paper, 10pt]{article}</span>
+<span class="sd">        \usepackage[american]{babel}</span>
+<span class="sd">        \usepackage{amsmath}</span>
+<span class="sd">        \usepackage{amsthm}</span>
+<span class="sd">        \numberwithin{equation}{section}</span>
+<span class="sd">        \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}</span>
+<span class="sd">        \usepackage{graphicx}</span>
+<span class="sd">        \usepackage{hyperref}</span>
+<span class="sd">        \usepackage{empheq}</span>
+<span class="sd">        \usepackage{pythonhighlight}&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\graphicspath{&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;{./&quot;</span> <span class="o">+</span> <span class="s2">&quot;wafer &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;results}&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\begin{document}</span>
+<span class="sd">        \tableofcontents</span>
+<span class="sd">        \newpage&quot;&quot;&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># doc.write(r&#39;\section{&#39; + str(param[&#39;repertoire&#39;]).split(&#39;\\&#39;)[-2]+&#39;}&#39;+&#39;\n&#39;)</span>
+
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section</span><span class="si">{Parameters}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\begin</span><span class="si">{center}</span><span class="s2"> \begin</span><span class="si">{tabular}</span><span class="s2">{|&quot;</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;l&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;|}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &amp; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\\\\\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;wname&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma_wl_h&quot;</span><span class="p">,</span> <span class="s2">&quot;decNum_h&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma&quot;</span><span class="p">,</span> <span class="s2">&quot;Ostu_corr&quot;</span><span class="p">]:</span>
+
+                    <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;\_&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &amp; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\\\\\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\end</span><span class="si">{tabular}</span><span class="s2"> \end</span><span class="si">{center}</span><span class="s2"> &quot;</span><span class="p">)</span>
+
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;cut&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_section</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\subsection{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;wafer&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\subsubsection{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\begin{figure}[h]</span>
+<span class="sd">        \begin{center}</span>
+<span class="sd">        \begin{tabular}{cc}</span>
+<span class="sd">        (a) &amp; (b)\\&quot;&quot;&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_brute</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;} &amp; \includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_bin</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;}</span><span class="se">\\</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(c) &amp; (d)</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_hist</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;} &amp; \includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_erea</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;}</span><span class="se">\\</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\end{tabular}</span>
+<span class="sd">        \end{center}</span>
+<span class="sd">        \caption{Image processing: (a) Superposition of the flattened image with the detected defaults, the erea of the circles</span>
+<span class="sd">        are equal to the erea of the defaults, the green circle have an area less than 50 px, the blue one have area greater or</span>
+<span class="sd">        equal than 50 px</span>
+<span class="sd">        ; (b) Binarized image; (c) Area histogram; (d) Box plot of the area.}</span>
+<span class="sd">        \end{figure}&quot;&quot;&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section </span><span class="si">{Synthese}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]</span><span class="si">{synthesege0.png}</span><span class="s2"> \newpage &quot;</span>
+            <span class="p">)</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="n">size_min</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;lt&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]{syntheselt&quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">size_min</span><span class="p">)</span>
+                <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;.png} \newpage &quot;</span>
+            <span class="p">)</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="n">size_min</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ge&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]{synthesege&quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">size_min</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;.png}&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\end </span><span class="si">{document}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\newpage&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="build_bbox"><a class="viewcode-back" href="../../image_features_extract.html#image_features_extract.image_features_extract_LITEN.build_bbox">[docs]</a><span class="k">def</span> <span class="nf">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ge&quot;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    aggregation of several box plot in a unique one.</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        param (dict) : param[&quot;root&quot;] root (Path)</span>
+<span class="sd">                       param[&quot;cut&quot;] name of the cut directory</span>
+<span class="sd">        size_min (int) : threshold used to slect the features according to their size</span>
+<span class="sd">        method (string): if method = &quot;ge&quot; we build a bbox with features with size &gt;= size_min</span>
+<span class="sd">                         if method = &quot;lt&quot; we build a bbox with features with size &lt; size_min</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        a PNG image stored in param[&quot;root&quot;] / Path(param[&quot;cut&quot;]) / Path(&quot;synthese&quot; + method + str(size_min) + &quot;.png&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    
+    <span class="c1"># 3rd party import</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">rep_wafers</span> <span class="o">=</span> <span class="p">[</span>
+                  <span class="n">param</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;cut&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span> 
+                  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;cut&quot;</span><span class="p">]))</span> <span class="k">if</span>  <span class="s1">&#39;wafer&#39;</span> <span class="ow">in</span> <span class="n">x</span>
+                 <span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">len_max</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">rep_wafer</span> <span class="ow">in</span> <span class="n">rep_wafers</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">rep_wafer</span><span class="p">)</span> <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">]:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">rep_wafer</span> <span class="o">/</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ge&quot;</span><span class="p">:</span>
+                <span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;size &gt;= @size_min&quot;</span><span class="p">)[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;size &lt; @size_min&quot;</span><span class="p">)[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
+
+            <span class="n">len_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="n">len_max</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dif</span> <span class="o">=</span> <span class="n">len_max</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dif</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">dif</span><span class="p">))</span>
+            <span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">box</span><span class="p">(</span><span class="n">rot</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">vert</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;cut&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+        <span class="n">param</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span>
+        <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;cut&quot;</span><span class="p">])</span>
+        <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;synthese&quot;</span> <span class="o">+</span> <span class="n">method</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">size_min</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">),</span>
+        <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span></div>
+    
+<div class="viewcode-block" id="make_tex_document_1"><a class="viewcode-back" href="../../image_features_extract.html#image_features_extract.image_features_extract_LITEN.make_tex_document_1">[docs]</a><span class="k">def</span> <span class="nf">make_tex_document_1</span><span class="p">(</span>
+    <span class="n">param</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">,</span>
+    <span class="n">mode</span>
+<span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Build a tech report containig a: </span>
+<span class="sd">        - header with the experimental condition</span>
+<span class="sd">        - section per image processing, </span>
+<span class="sd">        - tailer with the aggregated box plot</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        param (dict):</span>
+<span class="sd">        df (data frame) : </span>
+<span class="sd">        mode (str) : &quot;header&quot; open a new file and add a header</span>
+<span class="sd">                     &quot;corpus&quot; append section</span>
+<span class="sd">                     &quot;tailer&quot; add a tailer</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># 3rd party import</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cmx</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    
+    <span class="c1"># internal import</span>
+    <span class="kn">from</span> <span class="nn">.image_features_extract</span> <span class="kn">import</span> <span class="n">read_plu_topography</span><span class="p">,</span> <span class="n">fill_gap</span>
+
+    <span class="n">size_min</span> <span class="o">=</span> <span class="mi">50</span>
+
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">confocal_img</span><span class="p">,</span> <span class="n">rgb</span> <span class="o">=</span> <span class="n">read_plu_topography</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;repertoire&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># raw image save</span>
+    <span class="n">confocal_img1</span> <span class="o">=</span> <span class="n">fill_gap</span><span class="p">(</span><span class="n">confocal_img</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">confocal_img1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">confocal_img</span> <span class="o">==</span> <span class="mi">1000001</span><span class="p">)</span> <span class="c1"># find non measured pixels</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">s</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span> <span class="p">)</span>
+
+    <span class="n">file_save_im_raw</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-raw.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_raw</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+    
+    <span class="c1"># reconstructed image save</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">colorsMap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;plasma&quot;</span><span class="p">)</span> <span class="c1">#(&quot;RdYlGn&quot;)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">])))</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">s</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">tup</span><span class="p">:</span> <span class="n">tup</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">colorsMap</span><span class="p">)</span>
+    <span class="n">cNorm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">scalarMap</span> <span class="o">=</span> <span class="n">cmx</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">cNorm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">,</span><span class="n">N</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="mi">5</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">scalarMap</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">M</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">scalarMap</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="n">trash</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">400</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">500</span><span class="p">],</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">300</span><span class="p">,</span><span class="mi">400</span><span class="p">,</span><span class="mi">500</span><span class="p">],</span>
+                                   <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">scalarMap</span><span class="p">)</span>
+
+    <span class="n">file_save_im_rebuild</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-rebuild.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_rebuild</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="c1"># features size histogram plot</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">file_save_im_hist</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-hist.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_hist</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="c1"># features size box plot</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">])</span>
+    <span class="n">file_save_im_erea</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-im-bbox.jpg&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_results&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">file_save_im_erea</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="c1"># tex report generation</span>
+    <span class="n">file_save_doc_tex</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;_doc_tex.tex&quot;</span>
+    
+    <span class="n">w_a</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="n">w_a</span> <span class="o">=</span> <span class="s1">&#39;w&#39;</span>
+        
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s2">&quot;dir_tex&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;rapport_&#39;</span><span class="o">+</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;cut&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;.tex&#39;</span><span class="p">),</span> <span class="n">w_a</span><span class="p">)</span> <span class="k">as</span> <span class="n">doc</span><span class="p">:</span>
+    
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;header&quot;</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\documentclass[a4paper, 10pt]{article}</span>
+<span class="sd">                    \usepackage[american]{babel}</span>
+<span class="sd">                    \usepackage{amsmath}</span>
+<span class="sd">                    \usepackage{amsthm}</span>
+<span class="sd">                    \numberwithin{equation}{section}</span>
+<span class="sd">                    \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}</span>
+<span class="sd">                    \usepackage{graphicx}</span>
+<span class="sd">                    \usepackage{hyperref}</span>
+<span class="sd">                    \usepackage{empheq}</span>
+<span class="sd">                    \usepackage{pythonhighlight}&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\graphicspath{&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;{./&quot;</span> <span class="o">+</span> <span class="s2">&quot;wafer &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;results}&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\begin{document}</span>
+<span class="sd">                    \tableofcontents</span>
+<span class="sd">                    \newpage&quot;&quot;&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># doc.write(r&#39;\section{&#39; + str(param[&#39;repertoire&#39;]).split(&#39;\\&#39;)[-2]+&#39;}&#39;+&#39;\n&#39;)</span>
+
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section</span><span class="si">{Parameters}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\begin</span><span class="si">{center}</span><span class="s2"> \begin</span><span class="si">{tabular}</span><span class="s2">{|&quot;</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;l&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;|}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &amp; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">]])</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\\\\\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="s1">&#39;Top_hat_length&#39;</span><span class="p">]:</span>
+
+                    <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;\_&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &amp; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\\\\\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\end</span><span class="si">{tabular}</span><span class="s2"> \end</span><span class="si">{center}</span><span class="s2"> &quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;cut&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\subsection{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;wafer&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\subsubsection{&quot;</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\begin{figure}[h]</span>
+<span class="sd">                \begin{center}</span>
+<span class="sd">                \begin{tabular}{cc}</span>
+<span class="sd">                (a) &amp; (b)\\&quot;&quot;&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_raw</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;} &amp; \includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_rebuild</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;}</span><span class="se">\\</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(c) &amp; (d)</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_hist</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;} &amp; \includegraphics[width=0.5\textwidth]{&quot;</span>
+            <span class="o">+</span> <span class="n">file_save_im_erea</span>
+            <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;}</span><span class="se">\\</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">r</span><span class="sd">&quot;&quot;&quot;\end{tabular}</span>
+<span class="sd">        \end{center}</span>
+<span class="sd">        \caption{Image processing: (a) Superposition of the confocal topographic image with non measured pixels (in red)</span>
+<span class="sd">        ; (b) Image of the extracted features where the sizes of the cicles are proportional to the features area </span>
+<span class="sd">        and where the color of the circles are related to the features depth; (c) Area histogram; (d) Box plot of the area.}</span>
+<span class="sd">        \end{figure}&quot;&quot;&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        
+        
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;tailer&#39;</span><span class="p">:</span>  <span class="c1"># add a tailer with the agregated b box</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\section </span><span class="si">{Synthese}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]</span><span class="si">{synthesege0.png}</span><span class="s2"> \newpage &quot;</span>
+            <span class="p">)</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="n">size_min</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;lt&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]{syntheselt&quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">size_min</span><span class="p">)</span>
+                <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;.png} \newpage &quot;</span>
+            <span class="p">)</span>
+            <span class="n">build_bbox</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">size_min</span><span class="o">=</span><span class="n">size_min</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ge&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;\includegraphics[width=0.9\textwidth]{synthesege&quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">size_min</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;.png}&quot;</span>
+            <span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\end </span><span class="si">{document}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\newpage&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">image_features_extract.image_features_extract_LITEN</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, F. Bertin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+    </div>
+  </body>
+</html>
