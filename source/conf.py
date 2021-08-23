@@ -15,12 +15,12 @@ import sys
 import recommonmark.parser
 
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('C:/my_modules_Python/vre_eoles/'))
-sys.path.insert(0, os.path.abspath('C:/my_modules_Python/re_eoles/re_eoles/'))
+sys.path.insert(0, os.path.abspath('C:/my_modules_Python/image_features_extract/'))
+sys.path.insert(0, os.path.abspath('C:/my_modules_Python/image_features_extract/image_features_extract/'))
 
 # -- Project information -----------------------------------------------------
 
-project = 're_eoles'
+project = 'image_features_extract'
 copyright = '2021, F. Bertin'
 author = 'F. Bertin'
 
