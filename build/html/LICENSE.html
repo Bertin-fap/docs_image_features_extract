@@ -1,0 +1,378 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Introduction &#8212; re_eoles 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to image_features_extract’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to image_features_extract’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Introduction</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>These developments have been conducted in the frame of a project
+dedicated to the optimization of the process of PV silicon ingot sawing. To analyse the impact of the sawing conditions on
+the wafer quality, in terms of residual roughness and cristalline integrity, we develloped an automatic
+procedure to detect the features present at the top surface of a raw silicon wafer from diamond wire cutting.
+The aim is to extract and characterize in terms of size and location the topography “features” induced by diamonds
+indentation or fragile fracture present on the wafer surface and superimposed with saw marks. To do so we developped
+a package containing a toolbox to perform image processing on confocal images of the top surface.</p>
+</div>
+<div class="section" id="requirements">
+<h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><p>Python &gt;= 3.6</p></li>
+<li><p>numpy</p></li>
+<li><p>matplotlib</p></li>
+<li><p>pandas</p></li>
+<li><p>PyWavelets</p></li>
+<li><p>scikit-image</p></li>
+<li><p>scipy</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>To install image_features_extract:</dt><dd><p><strong>pip install image_features_extract</strong></p>
+</dd>
+</dl>
+</div>
+<div class="section" id="methods">
+<h1>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="confocal-file-reading">
+<h2>Confocal file reading<a class="headerlink" href="#confocal-file-reading" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Sensofar .txt files</p></li>
+<li><p>Sensofar .plu files</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="confocal-images-processing">
+<h2>Confocal images processing<a class="headerlink" href="#confocal-images-processing" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Background removal using</dt><dd><ul class="simple">
+<li><p>Top hat filtering;</p></li>
+<li><p>Gaussian filtering;</p></li>
+<li><p>LS 2D polynomial smoothing;</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Saw marks removal</dt><dd><ul class="simple">
+<li><p>wavelet filtering;</p></li>
+<li><p>Retrojection method;</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Features extraction and classification</p></li>
+<li><p>Batch processing of a bunch of files</p></li>
+<li><p>LaTeX report building</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="usage-example">
+<h1>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="read-and-process-a-confocal-image">
+<h2>read and process a confocal image<a class="headerlink" href="#read-and-process-a-confocal-image" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># parameters initialization</span>
+<span class="n">Top_hat_length</span> <span class="o">=</span> <span class="mi">50</span> <span class="c1"># should be larger than the largest feature to extract</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.3</span>    <span class="c1"># should be larger than the residual image background</span>
+
+<span class="c1"># read .plu image (N rows by M columns)</span>
+<span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">confocal_img</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ife</span><span class="o">.</span><span class="n">read_plu_topography</span><span class="p">(</span><span class="n">input_file_name</span><span class="p">)</span>
+
+<span class="c1"># substitute unmeasured values by interpolated ones</span>
+<span class="n">confocal_img1</span> <span class="o">=</span> <span class="n">ife</span><span class="o">.</span><span class="n">fill_gap</span><span class="p">(</span><span class="n">confocal_img</span><span class="p">)</span>
+
+<span class="c1"># background removal</span>
+<span class="n">im_corr</span> <span class="o">=</span> <span class="n">ife</span><span class="o">.</span><span class="n">top_hat_flattening</span><span class="p">(</span><span class="n">confocal_img1</span><span class="p">,</span> <span class="n">Top_hat_length</span><span class="p">,</span> <span class="n">top_hat_sens</span><span class="o">=-</span><span class="mi">1</span> <span class="p">)</span>
+
+<span class="c1"># binarization</span>
+<span class="n">im_bin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">im_corr</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># morphological analysis stored in df dataframe</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ife</span><span class="o">.</span><span class="n">analyse_morphologique</span><span class="p">(</span><span class="n">im_bin</span><span class="p">,</span><span class="n">im_corr</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id1">
+<img alt="_images/example.png" src="_images/example.png" />
+<p class="caption"><span class="caption-text"><em>Example of the features extraction from a confocal image showing: (i)The raw confocal image with superimposed in blue the area not aquired by the confocal microscope; (ii) The image after filtrering by a top hat; (iii) The image after binarization; (iv)  The result of the features extraction. The circles represent the detected features at their position. The area of the circles are equal to those of the features
+and there color are related to the features depth; (v) The features size histogram and box plot are plotted</em></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">Features extraction characteristics</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>idx</p></th>
+<th class="head"><p>x</p></th>
+<th class="head"><p>long_x</p></th>
+<th class="head"><p>y</p></th>
+<th class="head"><p>long_y</p></th>
+<th class="head"><p>size</p></th>
+<th class="head"><p>height</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>440</p></td>
+<td><p>4</p></td>
+<td><p>31</p></td>
+<td><p>1</p></td>
+<td><p>4</p></td>
+<td><p>-0.338682</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>88</p></td>
+<td><p>1</p></td>
+<td><p>33</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>-0.300135</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>11</p></td>
+<td><p>9</p></td>
+<td><p>46</p></td>
+<td><p>2</p></td>
+<td><p>16</p></td>
+<td><p>-0.467897</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>52</p></td>
+<td><p>5</p></td>
+<td><p>46</p></td>
+<td><p>1</p></td>
+<td><p>5</p></td>
+<td><p>-0.361629</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>555</p></td>
+<td><p>2</p></td>
+<td><p>60</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>-0.306462</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-even"><td><p>70</p></td>
+<td><p>672</p></td>
+<td><p>10</p></td>
+<td><p>401</p></td>
+<td><p>5</p></td>
+<td><p>35</p></td>
+<td><p>-0.409538</p></td>
+</tr>
+<tr class="row-odd"><td><p>71</p></td>
+<td><p>88</p></td>
+<td><p>9</p></td>
+<td><p>450</p></td>
+<td><p>5</p></td>
+<td><p>28</p></td>
+<td><p>-0.622761</p></td>
+</tr>
+<tr class="row-even"><td><p>72</p></td>
+<td><p>3</p></td>
+<td><p>8</p></td>
+<td><p>475</p></td>
+<td><p>7</p></td>
+<td><p>49</p></td>
+<td><p>-0.644196</p></td>
+</tr>
+<tr class="row-odd"><td><p>73</p></td>
+<td><p>109</p></td>
+<td><p>3</p></td>
+<td><p>477</p></td>
+<td><p>4</p></td>
+<td><p>9</p></td>
+<td><p>-0.319589</p></td>
+</tr>
+<tr class="row-even"><td><p>74</p></td>
+<td><p>382</p></td>
+<td><p>7</p></td>
+<td><p>478</p></td>
+<td><p>4</p></td>
+<td><p>15</p></td>
+<td><p>-0.338711</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="jupyter-notebook">
+<h1>Jupyter notebook<a class="headerlink" href="#jupyter-notebook" title="Permalink to this headline">¶</a></h1>
+<dl class="simple">
+<dt>In addition, three companion notebook can be cloned undre the link:</dt><dd><p><a class="reference external" href="https://github.com/Bertin-fap/image_features_extraction_example">https://github.com/Bertin-fap/image_features_extraction_example</a></p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>the first notebook <em>ife_simulation.ipynb</em> applies the automatic features detection on synthesis image;</p></li>
+<li><p>the second notebook <em>ife_dwsi_single.ipynb</em> applies the automatic features detection on “real” confocal image;</p></li>
+<li><p>the third notebook <em>ife_dwsi_batch.ipynb</em> applies the automatic features detection on a bunch of “real” confocal images and provides
+Tex reports</p></li>
+</ul>
+</div>
+<div class="section" id="license">
+<h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<p>MIT License</p>
+<p>Copyright (c) [2020] [François Bertin]</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+</div>
+<div class="section" id="about-the-authors">
+<h1>About the authors<a class="headerlink" href="#about-the-authors" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><p>François Bertin retired, formally senior scientist at CEA-LETI</p></li>
+<li><p>Amal Chabli retired, formally senior scientist at CEA-LITEN</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="acknowledgements">
+<h1>acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>We are most thankful to R. Rivas and F. Coustier from CEA_LITEN who conducted the sawing experiments and provided us withconfocal images.</p></li>
+<li><p>We are also most thankful to J. Bounan with whom we have devellopped a Matlab code to detect inclusions in IR transmission images of silicon wafer.</p></li>
+</ul>
+</div>
+<div class="section" id="contact">
+<h1>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h1>
+<p>Question? Please contact <a class="reference external" href="mailto:francois&#46;bertin7&#37;&#52;&#48;wanadoo&#46;fr">francois<span>&#46;</span>bertin7<span>&#64;</span>wanadoo<span>&#46;</span>fr</a> or <a class="reference external" href="mailto:amal&#46;chabli&#37;&#52;&#48;orange&#46;fr">amal<span>&#46;</span>chabli<span>&#64;</span>orange<span>&#46;</span>fr</a></p>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#methods">Methods</a><ul>
+<li><a class="reference internal" href="#confocal-file-reading">Confocal file reading</a></li>
+<li><a class="reference internal" href="#confocal-images-processing">Confocal images processing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage-example">Usage example</a><ul>
+<li><a class="reference internal" href="#read-and-process-a-confocal-image">read and process a confocal image</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#jupyter-notebook">Jupyter notebook</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+<li><a class="reference internal" href="#about-the-authors">About the authors</a></li>
+<li><a class="reference internal" href="#acknowledgements">acknowledgements</a></li>
+<li><a class="reference internal" href="#contact">Contact</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to image_features_extract’s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/LICENSE.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to image_features_extract’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Introduction</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, F. Bertin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+    </div>
+  </body>
+</html>

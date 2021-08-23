@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>image_features_extract package &#8212; re_eoles 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">image_features_extract package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="image-features-extract-package">
+<h1>image_features_extract package<a class="headerlink" href="#image-features-extract-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-image_features_extract.image_features_extract">
+<span id="image-features-extract-image-features-extract-module"></span><h2>image_features_extract.image_features_extract module<a class="headerlink" href="#module-image_features_extract.image_features_extract" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.Otsu_tresholding">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">Otsu_tresholding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">Ostu_corr</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#Otsu_tresholding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.Otsu_tresholding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image thresholding using the Otsu’s method
+<a class="reference external" href="https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=4310076">https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=4310076</a>
+Arguments:</p>
+<blockquote>
+<div><p>im (ndarray) : image
+Ostu_corr (float) : division of the Otsu threshold by Otsu_corr</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>im_bin (ndarray) : binarized image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.analyse_morphologique">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">analyse_morphologique</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img_bin</span></em>, <em class="sig-param"><span class="n">img</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#analyse_morphologique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.analyse_morphologique" title="Permalink to this definition">¶</a></dt>
+<dd><p>find the features in the image
+Arguments:</p>
+<blockquote>
+<div><p>img_bin (2D array): binarized image to analyze
+img (2D array):  image before binarization</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>df (dataframe): index|’x’|’long_x’| ‘y’|’long_y’| ‘size’|’depth’ with :</dt><dd><ul class="simple">
+<li><p>index: feature index</p></li>
+<li><p>x: gravity center x position of the feature</p></li>
+<li><p>long_x: maximum feature width</p></li>
+<li><p>y: gravity center y position of the feature</p></li>
+<li><p>long_y: maximum feature height</p></li>
+<li><p>size: pixels number of the feature</p></li>
+<li><p>depth : feature depth</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.convert">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">convert</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.convert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.fill_gap">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">fill_gap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#fill_gap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.fill_gap" title="Permalink to this definition">¶</a></dt>
+<dd><p>fill the missing value (1000001) of the confocal image using a linear interpolation method</p>
+<dl class="simple">
+<dt>Arguments:</dt><dd><p>data (2D nparray of floats): confocal image with missing values</p>
+</dd>
+<dt>Returns:</dt><dd><p>data (2D nparray of floats): confocal image with interpolated values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.gaussian_flattening">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">gaussian_flattening</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">sigma</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#gaussian_flattening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.gaussian_flattening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image flattening by substracting to the image its lowpass gaussian filtered image
+Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>im (2Darray) : image to flatten</p></li>
+<li><p>sigma (real): sigma of the gaussian filter</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><ul class="simple">
+<li><p>im_flatten (2D array) : flattened image</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.image_flattening">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">image_flattening</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ima</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#image_flattening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.image_flattening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stripes removal from an image.</p>
+<dl>
+<dt>Arguments :</dt><dd><p>ima (nparray): image to process
+<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: kwargs[“method_flat”] gauss , poy</p>
+<blockquote>
+<div><p>kwargs[“sigma”]  if method == “gauss” 
+kwargs[“kx”] if method == “poly” 
+kwargs[“ky”] if method == “poly”</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>ima (nparray): corrected image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.poly_flattening">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">poly_flattening</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">kx</span></em>, <em class="sig-param"><span class="n">ky</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#poly_flattening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.poly_flattening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image flattening by substracting to the image its smoothed image by least square regression.
+Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>im (2Darray) : image to flatten</p></li>
+<li><p>kx (int): sigma of the gaussian filterx order of the polynomial</p></li>
+</ul>
+<p>order (integer): if not None, limiting power of the monome xî*y^j with i+j&lt;= order 
+- ky (integer): y order of the polyn.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><ul class="simple">
+<li><p>im_flatten (2D array) : flattened image</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.read_image">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">read_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#read_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.read_image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.read_plu_topography">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">read_plu_topography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#read_plu_topography"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.read_plu_topography" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://sensofar.app.box.com/s/k3k9pboznc0shhjgzr5f7s4uzmeeessy">https://sensofar.app.box.com/s/k3k9pboznc0shhjgzr5f7s4uzmeeessy</a></p>
+<dl class="simple">
+<dt>Arguments:</dt><dd><p>file (string): path+name of the .plu file</p>
+</dd>
+<dt>Returns:</dt><dd><p>N (integer): number of rows
+M (integer): number of columns
+confocal_img (NxM nparray of floats): confocal image z in µm
+rgb (NxMx3 array of int) : rgb image of the plain view image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.stripe_del">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">stripe_del</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ima</span></em>, <em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#stripe_del"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.stripe_del" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supress stripe by aligning row using different method
+median: for each row, subtract the row median value from that row
+mean: for each row, subtract the row mean value from that row
+mode: for each row, subtract the mode value from that row
+polynomial: for each row, subtract least square smoothing polynomial from that row</p>
+<dl class="simple">
+<dt>Arguments</dt><dd><p>ima (nparray): image to process
+mode (string): algorith to apply (mean, median, mode, polynomial)
+order (integer): order of the smoothing polynomial</p>
+</dd>
+<dt>Returns</dt><dd><p>ima (nparray): corrected image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.stripe_removal">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">stripe_removal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ima</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#stripe_removal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.stripe_removal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stripes removal from an image.</p>
+<dl>
+<dt>Arguments :</dt><dd><p>ima (nparray): image to process
+<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: kwargs[“method”] = “wavelet” or “epandage” (default “wavelet”)</p>
+<blockquote>
+<div><p>kwargs[“mode”] = “mean”, “median”, “mode”, “poly” (default “median”)
+kwargs[“order”]  order orde of the smoothing polynomial
+kwargs[“wname”] wname of the wavelet (default db15)
+kwargs[“decNum_h”] order of decimation
+kwargs[“sigma_wl_h”] sigma_wl_h
+kwargs[“order”] order of the polynome if mode=poly</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>iama: corrected image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.top_hat_flattening">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">top_hat_flattening</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">struct_elmt_size</span></em>, <em class="sig-param"><span class="n">top_hat_sens</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#top_hat_flattening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.top_hat_flattening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image flattening using a 1 D morphological top hat filter to each row of the image</p>
+<dl>
+<dt>Arguments:</dt><dd><p>im (2D array): image to process
+struct_elmt_size (int): length of the structure element (must be larger then</p>
+<blockquote>
+<div><p>the larger length of the feature of interest)int)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>top_hat_sens (int): +1 for bumpy features</dt><dd><p>-1 for hollow featues</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>Ip (2D array) : processed image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract.xRemoveSpriesHorizontal">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract.</code><code class="sig-name descname">xRemoveSpriesHorizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ima</span></em>, <em class="sig-param"><span class="n">decNum</span></em>, <em class="sig-param"><span class="n">wname</span></em>, <em class="sig-param"><span class="n">sigma</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract.html#xRemoveSpriesHorizontal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract.xRemoveSpriesHorizontal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Horizontal stripes supression using the folowing algorithm
+[1] <a class="reference external" href="https://www.osapublishing.org/oe/abstract.cfm?uri=oe-17-10-8567">https://www.osapublishing.org/oe/abstract.cfm?uri=oe-17-10-8567</a></p>
+<dl class="simple">
+<dt>Arguments:</dt><dd><p>ima (ndarray) : image to process
+decNum (integer) : decimation number
+wname (string) : wavelet type
+sigma (float): damping factor (see [1])</p>
+</dd>
+<dt>Returns:</dt><dd><p>imc (ndarray) : filtered image</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-image_features_extract.image_features_extract_LITEN">
+<span id="image-features-extract-image-features-extract-liten-module"></span><h2>image_features_extract.image_features_extract_LITEN module<a class="headerlink" href="#module-image_features_extract.image_features_extract_LITEN" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract_LITEN.build_bbox">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract_LITEN.</code><code class="sig-name descname">build_bbox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">size_min</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'ge'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract_LITEN.html#build_bbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract_LITEN.build_bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>aggregation of several box plot in a unique one.</p>
+<dl>
+<dt>Arguments:</dt><dd><dl class="simple">
+<dt>param (dict)<span class="classifier">param[“root”] root (Path)</span></dt><dd><p>param[“cut”] name of the cut directory</p>
+</dd>
+</dl>
+<p>size_min (int) : threshold used to slect the features according to their size
+method (string): if method = “ge” we build a bbox with features with size &gt;= size_min</p>
+<blockquote>
+<div><p>if method = “lt” we build a bbox with features with size &lt; size_min</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>a PNG image stored in param[“root”] / Path(param[“cut”]) / Path(“synthese” + method + str(size_min) + “.png”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract_LITEN.image_processing">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract_LITEN.</code><code class="sig-name descname">image_processing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">analyse_morpho</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract_LITEN.html#image_processing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract_LITEN.image_processing" title="Permalink to this definition">¶</a></dt>
+<dd><p>depreciated use image_processing_1</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract_LITEN.image_processing_1">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract_LITEN.</code><code class="sig-name descname">image_processing_1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">analyse_morpho</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract_LITEN.html#image_processing_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract_LITEN.image_processing_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Process an image by:</dt><dd><ul class="simple">
+<li><p>reading a .plu image</p></li>
+<li><p>substituing non measured values by interpolated ones</p></li>
+<li><p>levelling the image using a morphological filter (top hat)</p></li>
+<li><p>binarizing the image using a threshold</p></li>
+<li><p>doing an image morphological analysis</p></li>
+</ul>
+</dd>
+<dt>Arguments:</dt><dd><dl class="simple">
+<dt>param (dict)<span class="classifier">param[“repertoire”] name of the directory</span></dt><dd><p>param[“file”] name of the file to process
+param[“dir_results”] name of the directory where the morphological resuts are stored
+param[‘Top_hat_length’] top hat legth should be larger than the largest feature to extract
+param[‘threshold’] should be larger than the residual image background</p>
+</dd>
+</dl>
+<p>analyse_morpho (bool): if True do the morphological analysis</p>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>if analyse_morpho == True</dt><dd><dl class="simple">
+<dt>df (dataframe): index|’x’|’long_x’| ‘y’|’long_y’| ‘size’|’depth’ with :</dt><dd><ul class="simple">
+<li><p>index: feature index</p></li>
+<li><p>x: gravity center x position of the feature</p></li>
+<li><p>long_x: maximum feature width</p></li>
+<li><p>y: gravity center y position of the feature</p></li>
+<li><p>long_y: maximum feature height</p></li>
+<li><p>size: pixels number of the feature</p></li>
+<li><p>depth : feature depth</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>if analyse_morpho == False  returns None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract_LITEN.make_tex_document">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract_LITEN.</code><code class="sig-name descname">make_tex_document</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">im_brute</span></em>, <em class="sig-param"><span class="n">im_corr_strie</span></em>, <em class="sig-param"><span class="n">im_flat</span></em>, <em class="sig-param"><span class="n">im_bin</span></em>, <em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'w'</span></em>, <em class="sig-param"><span class="n">flag</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">new_section</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract_LITEN.html#make_tex_document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract_LITEN.make_tex_document" title="Permalink to this definition">¶</a></dt>
+<dd><p>make_tex_document_1</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="image_features_extract.image_features_extract_LITEN.make_tex_document_1">
+<code class="sig-prename descclassname">image_features_extract.image_features_extract_LITEN.</code><code class="sig-name descname">make_tex_document_1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">mode</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/image_features_extract/image_features_extract_LITEN.html#make_tex_document_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#image_features_extract.image_features_extract_LITEN.make_tex_document_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Build a tech report containig a: </dt><dd><ul class="simple">
+<li><p>header with the experimental condition</p></li>
+<li><p>section per image processing,</p></li>
+<li><p>tailer with the aggregated box plot</p></li>
+</ul>
+</dd>
+<dt>Arguments:</dt><dd><p>param (dict):
+df (data frame) : 
+mode (str) : “header” open a new file and add a header</p>
+<blockquote>
+<div><p>“corpus” append section
+“tailer” add a tailer</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-image_features_extract">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-image_features_extract" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">image_features_extract package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-image_features_extract.image_features_extract">image_features_extract.image_features_extract module</a></li>
+<li><a class="reference internal" href="#module-image_features_extract.image_features_extract_LITEN">image_features_extract.image_features_extract_LITEN module</a></li>
+<li><a class="reference internal" href="#module-image_features_extract">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/image_features_extract.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">re_eoles 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">image_features_extract package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, F. Bertin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+    </div>
+  </body>
+</html>
